@@ -4,29 +4,27 @@ export function factory(node) {
     if (children instanceof Array) {
         let vIfChain = [];
         children.forEach((item, index) => {
-            if (isVNode(item)) {
-                if (item.props) {
-                    const hasVIf = Reflect.has(item.props, 'v-if');
-                    const hasVElseIf = Reflect.has(item.props, 'v-else-if');
-                    const hasVElse = Reflect.has(item.props, 'v-else');
-                    let type;
-                    if ([hasVIf, hasVElseIf, hasVElse].filter(item => item).length > 1) {
-                        throw new Error('\'v-if\',\'v-else-if\',\'v-else\'. Don\'t use them together');
-                    }
-                    if (hasVIf)
-                        vIfChain = [], vIfChain.push(item.props['v-if']), type = 1;
-                    else if (hasVElseIf)
-                        vIfChain.push(item.props['v-else-if']), type = 2;
-                    else if (hasVElse)
-                        vIfChain.push(true), type = 3;
-                    else
-                        vIfChain = [];
-                    if (type)
-                        children[index] = transformVif(item, index, vIfChain, type);
+            if (isVNode(item) && item.props) {
+                const hasVIf = Reflect.has(item.props, 'v-if');
+                const hasVElseIf = Reflect.has(item.props, 'v-else-if');
+                const hasVElse = Reflect.has(item.props, 'v-else');
+                let type;
+                if ([hasVIf, hasVElseIf, hasVElse].filter(item => item).length > 1) {
+                    throw new Error('\'v-if\',\'v-else-if\',\'v-else\'. Don\'t use them together');
                 }
-                else {
+                if (hasVIf)
+                    vIfChain = [], vIfChain.push(item.props['v-if']), type = 1;
+                else if (hasVElseIf)
+                    vIfChain.push(item.props['v-else-if']), type = 2;
+                else if (hasVElse)
+                    vIfChain.push(true), type = 3;
+                else
                     vIfChain = [];
-                }
+                if (type)
+                    children[index] = transformVif(item, index, vIfChain, type);
+            }
+            else {
+                vIfChain = [];
             }
         });
     }
@@ -60,7 +58,7 @@ export function factory(node) {
     Reflect.ownKeys(props).map(item => {
         if (typeof item === 'string') {
             if (item.match(/^v-model[^]*/)) {
-                directives.push(transformVmoel(node, item));
+                directives.push(transformVmodel(node, item));
             }
         }
     });
@@ -75,7 +73,7 @@ export function factory(node) {
     }
     return directives.length ? withDirectives(node, directives) : node;
 }
-function transformVmoel(node, kind) {
+function transformVmodel(node, kind) {
     const { props } = node;
     const val = props[kind];
     Reflect.deleteProperty(props, kind);
@@ -106,7 +104,6 @@ function transformVmoel(node, kind) {
         modifiers = result.slice(1);
     const obj = {};
     modifiers && modifiers.map(item => obj[item] = true);
-    console.log(obj);
     return modifiers ? [directive, val, '', obj] : [directive, val];
 }
 function transformVif(node, index, vIfChain, type) {

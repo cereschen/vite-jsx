@@ -1,38 +1,37 @@
 import { withDirectives, vShow, vModelText, vModelDynamic, vModelCheckbox, vModelSelect, vModelRadio, ObjectDirective, DirectiveArguments, VNode, isVNode, Directive } from 'vue';
 
 export function factory (node: VNode):VNode {
-
+  
   const { props, children } = node;
 
   if (children instanceof Array) {
     let vIfChain = [];
 
     children.forEach((item, index) => {
-      if (isVNode(item)) {
-        if (item.props) {
-          const hasVIf = Reflect.has(item.props, 'v-if');
-          const hasVElseIf = Reflect.has(item.props, 'v-else-if');
-          const hasVElse = Reflect.has(item.props, 'v-else');
-          let type:number;
+      if (isVNode(item) && item.props) {
+        const hasVIf = Reflect.has(item.props, 'v-if');
+        const hasVElseIf = Reflect.has(item.props, 'v-else-if');
+        const hasVElse = Reflect.has(item.props, 'v-else');
+        let type:number;
 
-          if ([hasVIf, hasVElseIf, hasVElse].filter(item =>item).length > 1) {
-            throw new Error('\'v-if\',\'v-else-if\',\'v-else\'. Don\'t use them together');
-          }
-         
-          if (hasVIf) vIfChain = [], vIfChain.push(item.props['v-if']), type = 1;
-          else if (hasVElseIf) vIfChain.push(item.props['v-else-if']), type = 2;
-          else if (hasVElse) vIfChain.push(true), type = 3;
-          else vIfChain = [];
-          if (type) children[index] = transformVif(item, index, vIfChain, type);
-        } else {
-          vIfChain = [];
-        }
+        if ([hasVIf, hasVElseIf, hasVElse].filter(item =>item).length > 1) {
+          throw new Error('\'v-if\',\'v-else-if\',\'v-else\'. Don\'t use them together');
+        }  
+        if (hasVIf) vIfChain = [], vIfChain.push(item.props['v-if']), type = 1;
+        else if (hasVElseIf) vIfChain.push(item.props['v-else-if']), type = 2;
+        else if (hasVElse) vIfChain.push(true), type = 3;
+        else vIfChain = [];
+        if (type) children[index] = transformVif(item, index, vIfChain, type);
+      } else {
+        vIfChain = [];
       }
+      
     });
   }
+
   if (!props) return node;
   const directives: DirectiveArguments = [];
-  const dynamicProps = [];
+  const dynamicProps:Array<string> = [];
 
   if (Reflect.has(props, 'v-show')) {
     const val = props['v-show'];
@@ -65,7 +64,7 @@ export function factory (node: VNode):VNode {
     if (typeof item === 'string'){
   
       if (item.match(/^v-model[^]*/)){
-        directives.push(transformVmoel(node, item));  
+        directives.push(transformVmodel(node, item));  
       }
     }
 
@@ -84,7 +83,7 @@ export function factory (node: VNode):VNode {
 }
 
 
-function transformVmoel(node:VNode, kind:string):[Directive, any, string, Record<string, boolean>]|[Directive, any]{
+function transformVmodel(node:VNode, kind:string):[Directive, any, string, Record<string, boolean>]|[Directive, any]{
   const {props} = node;
   const val = props[kind];
 
@@ -118,7 +117,6 @@ function transformVmoel(node:VNode, kind:string):[Directive, any, string, Record
   const obj:Record<string, boolean> = {};
 
   modifiers && modifiers.map(item=>obj[item] = true);
-  console.log(obj);
   
   return modifiers ? [directive, val, '', obj] : [directive, val];
 }

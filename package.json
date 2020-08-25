@@ -1,17 +1,23 @@
 {
   "name": "vite-jsx",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Help use directives such as v-if in the jsx of vite",
   "keywords": [
     "vite",
     "jsx",
     "directive"
   ],
+  "homepage": "https://github.com/cereschen/vite-jsx/tree/master",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cereschen/vite-jsx.git"
+  },
   "main": "dist/index.js",
   "files": [
     "dist",
     "transform"
   ],
+  "typings": "./dist/types/global.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "tsc -w",
