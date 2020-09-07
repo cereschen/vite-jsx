@@ -1,6 +1,6 @@
 # vite-jsx
 Help use directives such as v-if in the jsx of vite
-## Install
+## Usage
 Run  `npm install vite-jsx`
 
 or `yarn add vite-jsx`
@@ -8,10 +8,10 @@ or `yarn add vite-jsx`
 Add to `vite.config.js`
 
 ```js
-import { jsxTransform } from "vite-jsx/transform"
+import { createJsxPlugin } from "vite-jsx/plugin"
 
  module.exports={
-  transforms:[jsxTransform]
+  plugins:[createJsxPlugin()],
   ...
 }
 ```
@@ -24,8 +24,8 @@ import { jsxTransform } from "vite-jsx/transform"
 -  v-html
 -  v-model
    
-   modifiers : `number`,  `trim`,  `lazy`
-   example : `v-model_trim_number_lazy `
+   modifiers : `sync`, `number`,  `trim`,  `lazy`
+   example : `v-model_value = v-model:value `,`v-model_trim_number = v-model.trim.number `
 
 ## IntelliSense
 ### add to your *.d.ts

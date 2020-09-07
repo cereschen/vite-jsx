@@ -1,3 +1,2 @@
-import {Transform} from  'vite';
-
-export declare const jsxTransform:Transform;
+import { Transform } from 'vite/dist/node/transform';
+export declare const jsxTransform: Transform;

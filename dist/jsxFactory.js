@@ -58,7 +58,14 @@ export function factory(node) {
     Reflect.ownKeys(props).map(item => {
         if (typeof item === 'string') {
             if (item.match(/^v-model[^]*/)) {
-                directives.push(transformVmodel(node, item));
+                const val = props[item];
+                const result = transformVmodel(node, item);
+                if (result) {
+                    if (typeof result !== 'string')
+                        directives.push(result);
+                    else
+                        Reflect.set(props, result, val);
+                }
             }
         }
     });
@@ -75,6 +82,8 @@ export function factory(node) {
 }
 function transformVmodel(node, kind) {
     const { props } = node;
+    if (!props)
+        return null;
     const val = props[kind];
     Reflect.deleteProperty(props, kind);
     let directive;
@@ -103,11 +112,21 @@ function transformVmodel(node, kind) {
     if (result.length > 1)
         modifiers = result.slice(1);
     const obj = {};
-    modifiers && modifiers.map(item => obj[item] = true);
-    return modifiers ? [directive, val, '', obj] : [directive, val];
+    let isCustom = false;
+    let customProp = '';
+    modifiers && modifiers.map(item => {
+        if (['trim', 'number', 'lazy'].includes(item))
+            obj[item] = true;
+        else
+            isCustom = true;
+        customProp = item;
+    });
+    return isCustom ? customProp : modifiers ? [directive, val, '', obj] : [directive, val];
 }
 function transformVif(node, index, vIfChain, type) {
     const { props } = node;
+    if (!props)
+        return null;
     if (type === 1) {
         const val = props['v-if'];
         Reflect.deleteProperty(props, 'v-if');

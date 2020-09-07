@@ -1,22 +1,22 @@
 import { withDirectives, vShow, vModelText, vModelDynamic, vModelCheckbox, vModelSelect, vModelRadio, ObjectDirective, DirectiveArguments, VNode, isVNode, Directive } from 'vue';
 
-export function factory (node: VNode):VNode {
-  
+export function factory (node: VNode): VNode {
+
   const { props, children } = node;
 
   if (children instanceof Array) {
-    let vIfChain = [];
+    let vIfChain: boolean[] = [];
 
     children.forEach((item, index) => {
       if (isVNode(item) && item.props) {
         const hasVIf = Reflect.has(item.props, 'v-if');
         const hasVElseIf = Reflect.has(item.props, 'v-else-if');
         const hasVElse = Reflect.has(item.props, 'v-else');
-        let type:number;
+        let type: number | undefined;
 
-        if ([hasVIf, hasVElseIf, hasVElse].filter(item =>item).length > 1) {
+        if ([hasVIf, hasVElseIf, hasVElse].filter(item => item).length > 1) {
           throw new Error('\'v-if\',\'v-else-if\',\'v-else\'. Don\'t use them together');
-        }  
+        }
         if (hasVIf) vIfChain = [], vIfChain.push(item.props['v-if']), type = 1;
         else if (hasVElseIf) vIfChain.push(item.props['v-else-if']), type = 2;
         else if (hasVElse) vIfChain.push(true), type = 3;
@@ -25,13 +25,13 @@ export function factory (node: VNode):VNode {
       } else {
         vIfChain = [];
       }
-      
+
     });
   }
 
   if (!props) return node;
   const directives: DirectiveArguments = [];
-  const dynamicProps:Array<string> = [];
+  const dynamicProps: Array<string> = [];
 
   if (Reflect.has(props, 'v-show')) {
     const val = props['v-show'];
@@ -60,11 +60,17 @@ export function factory (node: VNode):VNode {
   if (Reflect.has(props, 'class')) {
     node.patchFlag = 2;
   }
-  Reflect.ownKeys(props).map(item=>{
-    if (typeof item === 'string'){
-  
-      if (item.match(/^v-model[^]*/)){
-        directives.push(transformVmodel(node, item));  
+  Reflect.ownKeys(props).map(item => {
+    if (typeof item === 'string') {
+
+      if (item.match(/^v-model[^]*/)) {
+        const val = props[item];
+        const result = transformVmodel(node, item);
+
+        if (result) {
+          if (typeof result !== 'string') directives.push(result);
+          else Reflect.set(props, result, val);
+        }
       }
     }
 
@@ -82,48 +88,58 @@ export function factory (node: VNode):VNode {
   return directives.length ? withDirectives(node, directives) : node;
 }
 
+function transformVmodel (node: VNode, kind: string): [Directive, any, string, Record<string, boolean>] | [Directive, any] | string | null {
+  const { props } = node;
 
-function transformVmodel(node:VNode, kind:string):[Directive, any, string, Record<string, boolean>]|[Directive, any]{
-  const {props} = node;
+  if (!props) return null;
   const val = props[kind];
 
   Reflect.deleteProperty(props, kind);
   let directive: ObjectDirective;
 
   switch (node.type) {
-  case 'input':
-    directive = vModelText;
-    break;
-  case 'textarea':
-    directive = vModelText;
-    break;
-  case 'checkbox':
-    directive = vModelCheckbox;
-    break;
-  case 'select':
-    directive = vModelSelect;
-    break;
-  case 'radio':
-    directive = vModelRadio;
-    break;
-  default:
-    directive = vModelDynamic;
-    break;
+    case 'input':
+      directive = vModelText;
+      break;
+    case 'textarea':
+      directive = vModelText;
+      break;
+    case 'checkbox':
+      directive = vModelCheckbox;
+      break;
+    case 'select':
+      directive = vModelSelect;
+      break;
+    case 'radio':
+      directive = vModelRadio;
+      break;
+    default:
+      directive = vModelDynamic;
+      break;
   }
   const result = kind.split('_');
-  let modifiers:Array<string>|undefined;
+  let modifiers: Array<string> | undefined;
 
   if (result.length > 1) modifiers = result.slice(1);
-  const obj:Record<string, boolean> = {};
+  const obj: Record<string, boolean> = {};
+  let isCustom = false;
+  let customProp = '';
 
-  modifiers && modifiers.map(item=>obj[item] = true);
-  
-  return modifiers ? [directive, val, '', obj] : [directive, val];
+  modifiers && modifiers.map(item => {
+    if (['trim', 'number', 'lazy'].includes(item))
+      obj[item] = true;
+    else
+      isCustom = true;
+    customProp = item;
+  });
+
+  return isCustom ? customProp : modifiers ? [directive, val, '', obj] : [directive, val];
 }
 
-function transformVif (node: VNode, index: number, vIfChain: Array<unknown>, type:number): VNode|null {
+function transformVif (node: VNode, index: number, vIfChain: Array<unknown>, type: number): VNode | null {
   const { props } = node;
 
+  if (!props) return null;
   if (type === 1) {
     const val = props['v-if'];
 
@@ -163,6 +179,6 @@ function transformVif (node: VNode, index: number, vIfChain: Array<unknown>, typ
     }
 
   }
-  
+
   return node;
 }
