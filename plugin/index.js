@@ -1,9 +1,9 @@
-const {jsxTransform} = require('./../transform'); 
+const { jsxTransform } = require('./../transform');
 
 module.exports = {
-  createJsxPlugin(){
+  createJsxPlugin() {
     return {
-      transforms :[jsxTransform],
+      transforms: [jsxTransform],
     };
   },
 };

@@ -1,17 +1,17 @@
-declare global{
+declare global {
 
-   namespace JSX {
+  namespace JSX {
     interface IntrinsicAttributes {
-      ['v-if']:unknown
-      ['v-else-if']:unknown
-      ['v-else']:boolean
-      ['v-show']:unknown
-      ['v-html']:unknown
-      ['v-text']:unknown
-      ['v-model']:unknown
+      ['v-if']?: unknown
+      ['v-else-if']?: unknown
+      ['v-else']?: boolean
+      ['v-show']?: unknown
+      ['v-html']?: unknown
+      ['v-text']?: unknown
+      ['v-model']?: unknown
     }
   }
 }
-export {};
+export { };
 
 
