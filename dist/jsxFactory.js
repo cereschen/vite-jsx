@@ -32,46 +32,50 @@ export function factory(node) {
         return node;
     const directives = [];
     const dynamicProps = [];
-    if (Reflect.has(props, 'v-show')) {
-        const val = props['v-show'];
-        Reflect.deleteProperty(props, 'v-show');
-        directives.push([vShow, val]);
-    }
-    if (Reflect.has(props, 'v-html')) {
-        const val = props['v-html'];
-        props['innerHTML'] = val;
-        dynamicProps.push('innerHTML');
-        Reflect.deleteProperty(props, 'v-html');
-    }
-    if (Reflect.has(props, 'v-text')) {
-        const val = props['v-text'];
-        props['textContent'] = val;
-        dynamicProps.push('textContent');
-        Reflect.deleteProperty(props, 'v-text');
-    }
-    if (Reflect.has(props, 'style')) {
-        node.patchFlag = 4;
-    }
-    if (Reflect.has(props, 'class')) {
-        node.patchFlag = 2;
-    }
-    Reflect.ownKeys(props).map(item => {
-        if (typeof item === 'string') {
-            if (item.match(/^v-model[^]*/)) {
-                const val = props[item];
-                const result = transformVmodel(node, item);
-                if (result) {
-                    if (typeof result !== 'string')
-                        directives.push(result);
-                    else
-                        Reflect.set(props, result, val);
+    const propKeys = Reflect.ownKeys(props);
+    const onlyOne = propKeys.length === 1;
+    propKeys.map((key) => {
+        if (typeof key !== 'string')
+            return;
+        const val = props[key];
+        switch (key) {
+            case 'style':
+                onlyOne ? node.patchFlag = 4 : dynamicProps.push('style');
+                break;
+            case 'class':
+                onlyOne ? node.patchFlag = 2 : dynamicProps.push('class');
+                break;
+            case "v-text":
+                props['textContent'] = val;
+                dynamicProps.push('textContent');
+                Reflect.deleteProperty(props, 'v-text');
+                break;
+            case "v-html":
+                props['innerHTML'] = val;
+                dynamicProps.push('innerHTML');
+                Reflect.deleteProperty(props, 'v-html');
+                break;
+            case 'v-show':
+                Reflect.deleteProperty(props, 'v-show');
+                directives.push([vShow, val]);
+                break;
+            default:
+                if (key.match(/^v-model[^]*/)) {
+                    const val = props[key];
+                    const result = transformVmodel(node, key);
+                    if (result) {
+                        if (typeof result !== 'string')
+                            directives.push(result);
+                        else
+                            Reflect.set(props, result, val);
+                    }
                 }
-            }
+                break;
         }
     });
     if (dynamicProps.length) {
         node.dynamicProps = dynamicProps;
-        if (node.patchFlag) {
+        if (dynamicProps.length !== propKeys.length) {
             node.patchFlag = 16;
         }
         else {

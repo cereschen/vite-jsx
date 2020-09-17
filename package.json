@@ -1,6 +1,6 @@
 {
   "name": "vite-jsx",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "Help use directives such as v-if in the jsx of vite",
   "keywords": [
     "vite",
