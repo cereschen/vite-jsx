@@ -26,7 +26,7 @@ export const jsxTransform: Transform = {
         });
       }
 
-      if (match.index) str.overwrite(match.index, match.index + match[0].length, match[1] + match[3] + (match[4] || ',') + `"onUpdate:${customValue || 'modelValue'}":[(val) => {${match[3].trim()} = val}],`);
+      if (match.index) str.overwrite(match.index, match.index + match[0].length, match[1] + match[3] + (match[4] || ',') + `"onUpdate:${customValue || 'modelValue'}":(val) => {${match[3].trim()} = val},`);
     });
 
     const map = str.generateMap();

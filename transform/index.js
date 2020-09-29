@@ -27,7 +27,7 @@ exports.jsxTransform = {
                 });
             }
             if (match.index)
-                str.overwrite(match.index, match.index + match[0].length, match[1] + match[3] + (match[4] || ',') + `"onUpdate:${customValue || 'modelValue'}":[(val) => {${match[3].trim()} = val}],`);
+                str.overwrite(match.index, match.index + match[0].length, match[1] + match[3] + (match[4] || ',') + `"onUpdate:${customValue || 'modelValue'}":(val) => {${match[3].trim()} = val},`);
         });
         const map = str.generateMap();
         return { code: str.toString(), map };
